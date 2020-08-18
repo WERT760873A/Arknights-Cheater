@@ -35,7 +35,7 @@
 7. 进入游戏 ~~享受快乐。~~
 
 #### 注：
-- BUG:当干员装载ID和CharId不同时或干员装载ID大于原来本有的干员数时，会同步失败。<br/>如果注重这个推荐使用[老版本](https://github.com/Tao0Lu/Arknights-Cheater-Bat "老版本")
+- BUG:当干员装载ID和CharId不同时或干员装载ID大于原来有的干员数时，会同步失败。<br/>如果注重这个推荐使用[老版本](https://github.com/Tao0Lu/Arknights-Cheater-Bat "老版本")
 - 有时候 mitmdump.exe 会卡住，这时候需要重新启动。
 - 此方法在安卓7.0以上中受限制(iOS安装描述文件后全版本都可以)，如果你是安卓7.0以上，请参考:<br/>解决方法1：~~使用安卓7.0以下版本的手机。~~<br/>解决方式2：Root手机，安装 Xposed + JustTrustMe。<br/>解决方式3：不Root，使用 VirtualXposed、太极等 + JustTrustMe。或将游戏安装到安卓内模拟器 如:VMOS等。
 
