@@ -8,6 +8,8 @@
 利用 mitmproxy 来实现对明日方舟数据的中间人攻击，从而修改部分我们希望修改的数据。
 通过设置PAC代理的方式可以支持任意设备、模拟器使用，支持多个用户同时使用。
 
+代码和想法基于[GhostStar/Arknights-Armada](https://github.com/GhostStar/Arknights-Armada "GhostStar/Arknights-Armada")
+
 ## 主要功能
 
 - 全干员满级、满潜、满精、满信赖。
