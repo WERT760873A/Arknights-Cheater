@@ -1109,7 +1109,7 @@ if __name__ == '__main__':
         sys.exit()
     elif not os.path.isfile('.\main.py'):
         QMessageBox.warning(Win,"错误","请将main.py放入同目录下",QMessageBox.Ok)
-        webbrowser.open_new_tab('https://mitmproxy.org/downloads/')
+        webbrowser.open_new_tab('https://github.com/Tao0Lu/Arknights-Cheater/blob/master/main.py')
         sys.exit()
     init()
     
