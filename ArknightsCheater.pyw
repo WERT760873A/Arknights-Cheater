@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import json,sys,os,socket,subprocess
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QMainWindow,QApplication,QAbstractItemView,QTableView,QAction,QLabel,QTableWidgetItem,QPushButton,QMessageBox,QFileDialog
+from PyQt5.QtCore import QThread,pyqtSignal
+from PyQt5 import QtCore,QtGui,QtWidgets
 import webbrowser
 #data & default
 DebugOff=True
@@ -607,6 +606,8 @@ def table_Char_selectChanged():
     Win.char_skin.clear()
     for e,skinId in enumerate(skinList[charId]):
         Win.char_skin.addItem(skinList[charId][skinId])
+    if Win.checkBox_customBest.isChecked():
+        Win.checkBox_customBest.setChecked(False)
     customChar_reload(index)
     char_eliteLv_changed()
 
@@ -650,9 +651,33 @@ def checkBoxCustomChar_changed():
 
 def checkBoxCustomBest_changed():
     if Win.checkBox_customBest.isChecked():
+        customChar_setBest()
         Win.frame_editChar.setEnabled(False)
     else:
         Win.frame_editChar.setEnabled(True)
+
+def customChar_setBest():
+    if not checkSelectChar():
+        return
+    index=Win.table_Char.currentIndex().row()
+    charIndex=int(Win.table_Char.item(index, 1).text())
+    charId=charList[charIndex]
+    bestCharList=bestChar(charIndex)
+    Win.char_eliteLv.setValue(bestCharList[2])
+    Win.char_Lv.setValue(bestCharList[3])
+    for e,skinId in enumerate(skinList[charId]):
+        if bestCharList[4]==skinList[charId][skinId]:
+            Win.char_skin.setCurrentIndex(e)
+    Win.char_favorPoint.setValue(bestCharList[5])
+    skillIn=bestCharList[6]
+    if skillIn in ['1','2','3']:
+        Win.char_skillIndex.setEnabled(True)
+        Win.char_skillIndex.setMaximum(int(bestCharList[7]))
+        Win.char_skillIndex.setValue(int(bestCharList[7]))
+    else:
+        Win.char_skillIndex.setEnabled(False)
+    Win.char_spLv.setValue(bestCharList[8])
+    Win.char_potLv.setValue(bestCharList[9])
 
 def debug():
     global DebugOff
@@ -830,6 +855,7 @@ def addCharList(item):
 def charEdit():
     if not checkSelectChar():
         return
+    row=Win.table_Char.currentIndex().row()
     charIdIn=charList[int(Win.table_Char.item(row, 1).text())]
     Win.table_Char.setItem(row, 2, QTableWidgetItem(str(Win.char_eliteLv.value())))
     Win.table_Char.setItem(row, 3, QTableWidgetItem(str(Win.char_Lv.value())))
