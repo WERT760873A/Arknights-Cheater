@@ -45,3 +45,5 @@
 >用户等级，理智上限<br/>干员精英等级，等级，专精等级，潜能等级
 
 不受限制(最大为PYQT最大值999999999)
+
+![Arknights-Cheater](https://i.loli.net/2020/08/20/PFgQDLvE64yzBnM.png)
