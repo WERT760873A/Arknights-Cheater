@@ -62,21 +62,19 @@ class Cheat:
             entryGame=True
         if flow.request.url.startswith("https://ak-as.hypergryph.com:9443/online/v1/ping"):
             j=json.loads(flow.response.get_text())
-            print('ArknightsCheater-防沉迷破解: 禁用 防沉迷-游戏剩余时间')
             if entryGame:
-                flow.response.set_text('{"result": 0, "message": "OK", "interval": 60, "timeLeft": 5400, "alertTime": 600}')
+                flow.response.set_text('{"result":0,"message":"OK","interval":5400,"timeLeft":-1,"alertTime":600}')
                 entryGame=False
             else:
                 flow.response = http.HTTPResponse.make(404)
-                
             if j['message'][:6]=='您已达到本日':
                 print('ArknightsCheater-防沉迷破解: 您已达到本日在线时长上限或不在可游戏时间范围内，破解后仍可以继续游戏，但请合理安排游戏时间。')
             else:
-                s = 5400-j['timeLeft']
+                s = j['timeLeft']
                 h = int(s/3600)
                 m = int((s-h*3600)/60)
                 ss = int(s-h*3600-m*60)
-                print ('ArknightsCheater-防沉迷破解: 您已在线'+str(h)+'小时'+str(m)+'分钟' + str(ss)+'秒，请合理安排游戏时间。')
+                print('ArknightsCheater-防沉迷破解: 游戏剩余时间 '+str(h)+'小时'+str(m)+'分钟' + str(ss)+'秒 修改为 不限制，但请合理安排游戏时间。')
         if flow.request.url.startswith("https://ak-fs.hypergryph.com/announce/Android/preannouncement/231.html") or flow.request.url.startswith("https://ak-fs.hypergryph.com/announce/IOS/preannouncement/231.html"):
             flow.response.set_text(html_notice)
         if flow.request.host in Servers and flow.request.path.startswith("/account/syncData"):
