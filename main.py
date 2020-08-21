@@ -88,6 +88,7 @@ class Cheat:
             j['user']['status']['ap']=self.userData['ap']
             j['user']['status']['maxAp']=self.userData['maxAp']
             j['user']['status']['resume']=self.userData['resume']
+            j['playerDataDelta']['modified']['status']['resume']=self.userData['resume']
             j['user']['status']['secretary']=self.userData['secretary']
             j['user']['status']['secretarySkinId']=self.userData['secretarySkinId']
             j['user']['status']['gold']=self.userData['item']['gold']
