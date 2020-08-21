@@ -77,6 +77,10 @@ class Cheat:
                 print('ArknightsCheater-防沉迷破解: 游戏剩余时间 '+str(h)+'小时'+str(m)+'分钟' + str(ss)+'秒 修改为 不限制，但请合理安排游戏时间。')
         if flow.request.url.startswith("https://ak-fs.hypergryph.com/announce/Android/preannouncement/231.html") or flow.request.url.startswith("https://ak-fs.hypergryph.com/announce/IOS/preannouncement/231.html"):
             flow.response.set_text(html_notice)
+        if flow.request.url.startswith("https://ak-gs.hypergryph.com:8443/account/syncStatus"):
+            j=json.loads(flow.response.get_text())
+            j['playerDataDelta']['modified']['status']['resume']=self.userData['resume']
+            flow.response.set_text(json.dumps(j))
         if flow.request.host in Servers and flow.request.path.startswith("/account/syncData"):
             text = flow.response.get_text()
             j = json.loads(text)
@@ -88,7 +92,6 @@ class Cheat:
             j['user']['status']['ap']=self.userData['ap']
             j['user']['status']['maxAp']=self.userData['maxAp']
             j['user']['status']['resume']=self.userData['resume']
-            j['playerDataDelta']['modified']['status']['resume']=self.userData['resume']
             j['user']['status']['secretary']=self.userData['secretary']
             j['user']['status']['secretarySkinId']=self.userData['secretarySkinId']
             j['user']['status']['gold']=self.userData['item']['gold']
