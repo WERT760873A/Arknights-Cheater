@@ -32,8 +32,6 @@ class Cheat:
                 data = flow.request.get_content()
                 print('ArknightsCheater:战斗开始 >>>')
                 j = json.loads(data)
-                print(j['squad']['slots'])
-                print(userData['squads'][str(j['squad']['squadId'])]['slots'])
                 if not j['squad']==None:
                     j['squad']['slots']=userData['squads'][str(j['squad']['squadId'])]['slots']
                 flow.request.set_content(json.dumps(j).encode())
@@ -58,7 +56,6 @@ class Cheat:
             if flow.request.host in Servers and flow.request.path.startswith("/account/syncData"):
                 text = flow.response.get_text()
                 j = json.loads(text)
-                print(j['user']['troop']['chars'])
                 item=[{
                     'gold': j['user']['status']['gold'],
                     'diamondShard': j['user']['status']['diamondShard'],
@@ -101,6 +98,7 @@ class Cheat:
                 entryGame=False
             else:
                 flow.response = http.HTTPResponse.make(404)
+            print('')
             if j['message'][:6]=='您已达到本日':
                 userIsMinors=True
                 print('ArknightsCheater-防沉迷破解: 您已达到本日在线时长上限或不在可游戏时间范围内，破解后仍可以继续游戏，但请合理安排游戏时间。')
@@ -110,6 +108,7 @@ class Cheat:
                 m = int((s-h*3600)/60)
                 ss = int(s-h*3600-m*60)
                 print('ArknightsCheater-防沉迷破解: 游戏剩余时间 '+str(h)+'小时'+str(m)+'分钟' + str(ss)+'秒 修改为 不限制，但请合理安排游戏时间。')
+            print('')
         if flow.request.url.startswith("https://ak-fs.hypergryph.com/announce/Android/preannouncement/231.html") or flow.request.url.startswith("https://ak-fs.hypergryph.com/announce/IOS/preannouncement/231.html") and not isInit:
             flow.response.set_text(html_notice)
         if flow.request.host in Servers and flow.request.path.startswith("/account/syncStatus") and not isInit:
@@ -119,6 +118,7 @@ class Cheat:
         if flow.request.host in Servers and flow.request.path.startswith("/account/syncData") and not isInit:
             text = flow.response.get_text()
             j = json.loads(text)
+            print('')
             print('ArknightsCheater:' + j['user']['status']['nickName'] + '#' + flow.request.headers['uid'] + ' 初始化...')   
             j['user']['status']['uid']=str(userData['uid'])
             j['user']['status']['nickName']=userData['nickName']
