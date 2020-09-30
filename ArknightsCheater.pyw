@@ -391,15 +391,6 @@ class Ui_MainWindow(object):
         self.char_spLv.setFont(font)
         self.char_spLv.setMaximum(3)
         self.char_spLv.setObjectName("char_spLv")
-        self.label_23 = QtWidgets.QLabel(self.frame_editChar)
-        self.label_23.setGeometry(QtCore.QRect(10, 10, 61, 22))
-        font = QtGui.QFont()
-        font.setPointSize(10)
-        self.label_23.setFont(font)
-        self.label_23.setObjectName("label_23")
-        self.comboBox_editChar = QtWidgets.QComboBox(self.frame_editChar)
-        self.comboBox_editChar.setGeometry(QtCore.QRect(80, 10, 121, 22))
-        self.comboBox_editChar.setObjectName("comboBox_editChar")
         self.checkBox_customBest = QtWidgets.QCheckBox(self.groupBox_customChar)
         self.checkBox_customBest.setGeometry(QtCore.QRect(20, 310, 61, 30))
         font = QtGui.QFont()
@@ -419,6 +410,15 @@ class Ui_MainWindow(object):
         font.setPointSize(10)
         self.pushButton_charEdit.setFont(font)
         self.pushButton_charEdit.setObjectName("pushButton_charEdit")
+        self.comboBox_editChar = QtWidgets.QComboBox(self.groupBox_customChar)
+        self.comboBox_editChar.setGeometry(QtCore.QRect(90, 50, 121, 22))
+        self.comboBox_editChar.setObjectName("comboBox_editChar")
+        self.label_23 = QtWidgets.QLabel(self.groupBox_customChar)
+        self.label_23.setGeometry(QtCore.QRect(20, 50, 61, 22))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.label_23.setFont(font)
+        self.label_23.setObjectName("label_23")
         self.table_char = QtWidgets.QTableWidget(self.tab_charData)
         self.table_char.setGeometry(QtCore.QRect(10, 20, 441, 241))
         font = QtGui.QFont()
@@ -943,10 +943,15 @@ def customChar_setBest():
     if not checkSelectChar():
         return
     index=Win.table_char.currentIndex().row()
-    charIndex=int(Win.table_char.item(index, 1).text())
+    if Win.comboBox_editChar.currentIndex()==0:
+        charIndex=int(Win.table_char.item(index, 1).text())
+    else:
+        charIndex=Win.comboBox_editChar.currentIndex()-1
     charId=charList[charIndex]
     bestCharList=bestChar(charIndex)
+    Win.char_eliteLv.setMaximum(bestCharList[2])
     Win.char_eliteLv.setValue(bestCharList[2])
+    Win.char_Lv.setMaximum(bestCharList[3])
     Win.char_Lv.setValue(bestCharList[3])
     for e,skinId in enumerate(skinList[charId]):
         if bestCharList[4]==skinList[charId][skinId]:
@@ -1458,6 +1463,8 @@ def editChar_changed():
         Win.char_skillIndex.setMaximum(skillIn)
     else:
         Win.char_skillIndex.setEnabled(False)
+    if Win.checkBox_customBest.isChecked():
+        customChar_setBest()
 
 def charSelectAll():
     if Win.checkBox_selectInv.isChecked():
@@ -1478,14 +1485,43 @@ def charSelectInv():
         Win.table_char.selectRow(i)
     table_char_selectChanged()
 
+    global isRun
+    if isRun:
+        isRun=False
+        Win.pushButton_run.setText('停止')
+        f=open('.\data.acdata', 'w', encoding='UTF-8')
+        f.write(get_data())
+        f.close
+        Win.log_browser.append('<font color="red">ArknightsCheater:启动mitmproxy中...</font>')
+        Win.thread.start()
+        Win.onLabel.setText('修改器端已在端口%s上开启'% (str(Win.gob_porxy.value())))
+    else:
+        isRun=True
+        Win.pushButton_run.setText('启动')
+        Win.thread.terminate()
+        subprocess.Popen("taskkill /f /im mitmdump.exe>nul",shell=True)
+        Win.log_browser.document().clear()
+        Win.log_browser.setHtml("<html><head></head><body bgcolor=#293134></body></html>")
+        Win.log_browser.append('<font color="#fff">用户停止操作</font>')
+        Win.onLabel.setText('修改器端已关闭')
+
 def initFromGame():
     global isInit
-    isInit=True
-    f=open('.\data.acdata', 'w', encoding='UTF-8')
-    f.write('{"init":true,"fcm":'+str(Win.checkBox_fcm_init.isChecked()).lower()+'}')
-    f.close
-    Win.inInitInfo.setVisible(True)
-    Win.thread.start()
+    if isInit:
+        isInit=False
+        Win.pushButton_run_init.setText('启动')
+        Win.thread.terminate()
+        subprocess.Popen("taskkill /f /im mitmdump.exe>nul",shell=True)
+        Win.inInitInfo.setText('修改器端已关闭')
+    else:
+        isInit=True
+        Win.pushButton_run_init.setText('停止')
+        f=open('.\data.acdata', 'w', encoding='UTF-8')
+        f.write('{"init":true,"fcm":'+str(Win.checkBox_fcm_init.isChecked()).lower()+'}')
+        f.close
+        Win.inInitInfo.setVisible(True)
+        Win.thread.start()
+        Win.inInitInfo.setText('启动mitmproxy中...')
 
 def initDataFromGame():
     global isInit
@@ -1610,13 +1646,12 @@ class Window(QMainWindow, Ui_MainWindow):
         QtWidgets.QWidget.resizeEvent(self, event)
 
     def update_logtext(self, str):
-        global isInit
         if isInit:
             if str[:12]=='initFinished':
                 initDataFromGame()
             if str[19:28]=='mitmproxy':
                 self.inInitInfo.setText('等待游戏启动中...')
-        else:
+        elif not isRun:
             if str[:16]=='ArknightsCheater':
                 self.log_browser.append('<font color="red">'+str+'</font>')
             else:
@@ -1718,3 +1753,510 @@ if __name__ == '__main__':
     Win.comboBox_editChar.activated.connect(lambda:editChar_changed())
     Win.currSquad.activated.connect(lambda:currSquad_changed())
     sys.exit(app.exec_())
+start.setObjectName("tab_start")
+        self.log_browser = QtWidgets.QTextBrowser(self.tab_start)
+        self.log_browser.setGeometry(QtCore.QRect(178, 0, 541, 381))
+        font = QtGui.QFont()
+        font.setPointSize(8)
+        self.log_browser.setFont(font)
+        self.log_browser.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        self.log_browser.setObjectName("log_browser")
+        self.groupBox_porxy = QtWidgets.QGroupBox(self.tab_start)
+        self.groupBox_porxy.setGeometry(QtCore.QRect(10, 10, 161, 59))
+        self.groupBox_porxy.setObjectName("groupBox_porxy")
+        self.gob_porxy = QtWidgets.QSpinBox(self.groupBox_porxy)
+        self.gob_porxy.setGeometry(QtCore.QRect(70, 30, 81, 22))
+        self.gob_porxy.setMaximum(65535)
+        self.gob_porxy.setProperty("value", 12450)
+        self.gob_porxy.setObjectName("gob_porxy")
+        self.label_21 = QtWidgets.QLabel(self.groupBox_porxy)
+        self.label_21.setGeometry(QtCore.QRect(10, 30, 51, 22))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.label_21.setFont(font)
+        self.label_21.setObjectName("label_21")
+        self.pushButton_run = QtWidgets.QPushButton(self.tab_start)
+        self.pushButton_run.setGeometry(QtCore.QRect(40, 120, 101, 31))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.pushButton_run.setFont(font)
+        self.pushButton_run.setObjectName("pushButton_run")
+        self.checkBox_fcm = QtWidgets.QCheckBox(self.tab_start)
+        self.checkBox_fcm.setGeometry(QtCore.QRect(20, 80, 111, 30))
+        font = QtGui.QFont()
+        font.setPointSize(10)
+        self.checkBox_fcm.setFont(font)
+        self.checkBox_fcm.setObjectName("checkBox_fcm")
+        self.tabWidget.addTab(self.tab_start, "")
+        MainWindow.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 720, 30))
+        self.menubar.setObjectName("menubar")
+        self.file = QtWidgets.QMenu(self.menubar)
+        self.file.setObjectName("file")
+
+        self.debug = QtWidgets.QMenu(self.menubar)
+        self.debug.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
+        self.debug.setToolTipDuration(5)
+        self.debug.setToolTipsVisible(False)
+        self.debug.setObjectName("debug")
+        self.action_debug = QAction(MainWindow)
+        self.action_debug.setCheckable(False)
+        self.action_debug.setObjectName('debugAction')
+        self.action_debug.setText('Debug模式')
+        
+        self.about = QtWidgets.QMenu(self.menubar)
+        self.about.setObjectName("about")
+        
+        MainWindow.setMenuBar(self.menubar)
+        self.statusBar = QtWidgets.QStatusBar(MainWindow)
+        self.statusBar.setObjectName("statusBar")
+        MainWindow.setStatusBar(self.statusBar)
+        self.onLabel=QLabel('')
+        self.statusBar.addPermanentWidget(self.onLabel, stretch=0)
+        self.action_import = QtWidgets.QAction(MainWindow)
+        self.action_import.setObjectName("action_import")
+        self.action_export = QtWidgets.QAction(MainWindow)
+        self.action_export.setObjectName("action_export")
+        self.action_exit = QtWidgets.QAction(MainWindow)
+        self.action_exit.setObjectName("action_exit")
+        self.action_help = QtWidgets.QAction(MainWindow)
+        self.action_help.setObjectName("action_help")
+        self.action_notice = QtWidgets.QAction(MainWindow)
+        self.action_notice.setObjectName("action_notice")
+        self.file.addAction(self.action_import)
+        self.file.addAction(self.action_export)
+        self.file.addSeparator()
+        self.file.addAction(self.action_exit)
+        self.about.addAction(self.action_help)
+        self.about.addSeparator()
+        self.about.addAction(self.action_notice)
+        self.menubar.addAction(self.file.menuAction())
+        self.menubar.addAction(self.action_debug)
+        self.menubar.addAction(self.about.menuAction())
+
+        self.retranslateUi(MainWindow)
+        self.tabWidget.setCurrentIndex(0)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        MainWindow.setTabOrder(self.user_UID, self.user_name)
+        MainWindow.setTabOrder(self.user_name, self.user_nameNum)
+        MainWindow.setTabOrder(self.user_nameNum, self.user_Lv)
+        MainWindow.setTabOrder(self.user_Lv, self.user_ap)
+        MainWindow.setTabOrder(self.user_ap, self.user_apMax)
+        MainWindow.setTabOrder(self.user_apMax, self.user_resume)
+        MainWindow.setTabOrder(self.user_resume, self.user_secretary)
+        MainWindow.setTabOrder(self.user_secretary, self.user_secretarySkin)
+        MainWindow.setTabOrder(self.user_secretarySkin, self.list_item)
+        MainWindow.setTabOrder(self.list_item, self.item_value)
+        MainWindow.setTabOrder(self.item_value, self.pushButton_itemEdit)
+        MainWindow.setTabOrder(self.pushButton_itemEdit, self.gob_porxy)
+        MainWindow.setTabOrder(self.gob_porxy, self.table_char)
+        MainWindow.setTabOrder(self.table_char, self.comboBox_addChar)
+        MainWindow.setTabOrder(self.comboBox_addChar, self.checkBox_addBest)
+        MainWindow.setTabOrder(self.checkBox_addBest, self.pushButton_addChar)
+        MainWindow.setTabOrder(self.pushButton_addChar, self.checkBox_customChar)
+        MainWindow.setTabOrder(self.checkBox_customChar, self.pushButton_addAllChar)
+        MainWindow.setTabOrder(self.pushButton_addAllChar, self.char_eliteLv)
+        MainWindow.setTabOrder(self.char_eliteLv, self.char_Lv)
+        MainWindow.setTabOrder(self.char_Lv, self.char_skin)
+        MainWindow.setTabOrder(self.char_skin, self.char_favorPoint)
+        MainWindow.setTabOrder(self.char_favorPoint, self.char_skillLv)
+        MainWindow.setTabOrder(self.char_skillLv, self.char_skillIndex)
+        MainWindow.setTabOrder(self.char_skillIndex, self.char_spLv)
+        MainWindow.setTabOrder(self.char_spLv, self.char_potLv)
+        MainWindow.setTabOrder(self.char_potLv, self.checkBox_customBest)
+        MainWindow.setTabOrder(self.checkBox_customBest, self.pushButton_charEdit)
+        MainWindow.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint|QtCore.Qt.WindowCloseButtonHint)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "ArknightsCheater"))
+        self.textBrowser_init.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'SimSun\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">此破解方法在安卓7.0以上中受限制(iOS安装描述文件后全版本都可以)，如果你是安卓7.0以上，请参考:</p>\n"
+"<ul style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\"\" style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">解决方法1：使用安卓7.0以下版本的手机。</li>\n"
+"<li style=\"\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">解决方式2：Root手机，安装 Xposed + JustTrustMe。</li>\n"
+"<li style=\"\" style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">解决方式3：不Root，使用 VirtualXposed、太极等 + JustTrustMe。或使用安卓内模拟器 如:VMOS等。</li></ul>\n"
+"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">请在手机或模拟器中完成以下配置：</p>\n"
+"<ol style=\"margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;\"><li style=\"\" style=\" margin-top:12px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">确保手机或模拟器和电脑在同一局域网下。</li>\n"
+"<li style=\"\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">进入手机或模拟器WLAN(Wi-Fi)设置配置手机代理。<br />安卓：修改网络—高级选项—代理—手动<br />iOS：HTTP代理—配置代理—手动<br />将服务器和端口设置为mitmproxy所监听的主机ip和端口。<br />保存/储存</li>\n"
+"<li style=\"\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">右侧配置设置并点击启动</li>\n"
+"<li style=\"\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">进入网站 http://mitm.it 下载证书(iOS为描述文件)并安装。<br />iOS多一步：设置—通用—关于本机—证书信任设置—mitmproxy—打开</li>\n"
+"<li style=\"\" style=\" margin-top:0px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">重新进入游戏。</li></ol></body></html>"))
+        self.pushButton_run_init.setText(_translate("MainWindow", "启动"))
+        self.groupBox_porxy_init.setTitle(_translate("MainWindow", "代理设置"))
+        self.label_33.setText(_translate("MainWindow", "端口:"))
+        self.inInitInfo.setText(_translate("MainWindow", "启动mitmproxy中..."))
+        self.pushButton_initSkip.setText(_translate("MainWindow", "跳过/高级修改"))
+        self.label_3.setText(_translate("MainWindow", "启动游戏以初始化"))
+        self.pushButton_initCTN.setText(_translate("MainWindow", "继续"))
+        self.pushButton_initSkip_2.setText(_translate("MainWindow", "跳过/高级修改"))
+        self.checkBox_fcm_init.setText(_translate("MainWindow", "防沉迷破解"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), _translate("MainWindow", "初始化"))
+        self.groupBox_item.setTitle(_translate("MainWindow", "物品"))
+        __sortingEnabled = self.list_item.isSortingEnabled()
+        self.list_item.setSortingEnabled(False)
+        item = self.list_item.item(0)
+        item.setText(_translate("MainWindow", "龙门币"))
+        item = self.list_item.item(1)
+        item.setText(_translate("MainWindow", "合成玉"))
+        item = self.list_item.item(2)
+        item.setText(_translate("MainWindow", "安卓源石"))
+        item = self.list_item.item(3)
+        item.setText(_translate("MainWindow", "iOS源石"))
+        item = self.list_item.item(4)
+        item.setText(_translate("MainWindow", "演习券"))
+        item = self.list_item.item(5)
+        item.setText(_translate("MainWindow", "资深凭证"))
+        item = self.list_item.item(6)
+        item.setText(_translate("MainWindow", "高级凭证"))
+        item = self.list_item.item(7)
+        item.setText(_translate("MainWindow", "寻访凭证"))
+        item = self.list_item.item(8)
+        item.setText(_translate("MainWindow", "十连寻访凭证"))
+        self.list_item.setSortingEnabled(__sortingEnabled)
+        self.pushButton_itemEdit.setText(_translate("MainWindow", "修改"))
+        self.label_14.setText(_translate("MainWindow", "昵称编号:"))
+        self.label_16.setText(_translate("MainWindow", "理智:"))
+        self.user_nameNum.setPlaceholderText(_translate("MainWindow", "8888"))
+        self.label_18.setText(_translate("MainWindow", "签名:"))
+        self.groupBox_secretary.setTitle(_translate("MainWindow", "助理"))
+        self.label_20.setText(_translate("MainWindow", "助理皮肤:"))
+        self.label_19.setText(_translate("MainWindow", "助理:"))
+        self.label_13.setText(_translate("MainWindow", "昵称:"))
+        self.user_UID.setPlaceholderText(_translate("MainWindow", "8888888"))
+        self.user_name.setPlaceholderText(_translate("MainWindow", "破解用户"))
+        self.label_22.setText(_translate("MainWindow", "等级:"))
+        self.label_17.setText(_translate("MainWindow", "理智上限:"))
+        self.user_resume.setPlaceholderText(_translate("MainWindow", "Ta什么都没有留下"))
+        self.label_15.setText(_translate("MainWindow", "UID:"))
+        self.label_7.setText(_translate("MainWindow", "警告:对以上数据的修改可能导致游戏崩溃"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_userData), _translate("MainWindow", "用户数据"))
+        self.groupBox_addChar.setTitle(_translate("MainWindow", "添加干员"))
+        self.checkBox_addBest.setText(_translate("MainWindow", "最好"))
+        self.pushButton_addChar.setText(_translate("MainWindow", "添加干员"))
+        self.checkBox_customChar.setText(_translate("MainWindow", "自定义干员"))
+        self.pushButton_addAllChar.setText(_translate("MainWindow", "添加所有干员"))
+        self.pushButton_clearChar.setText(_translate("MainWindow", "清空"))
+        self.checkBox_selectAll.setText(_translate("MainWindow", "全选"))
+        self.checkBox_selectInv.setText(_translate("MainWindow", "反选"))
+        self.groupBox_customChar.setTitle(_translate("MainWindow", "自定义干员"))
+        self.label_10.setText(_translate("MainWindow", "潜能等级:"))
+        self.label_9.setText(_translate("MainWindow", "技能"))
+        self.label_2.setText(_translate("MainWindow", "皮肤:"))
+        self.label_5.setText(_translate("MainWindow", " 等级:"))
+        self.label_4.setText(_translate("MainWindow", "精英:"))
+        self.label.setText(_translate("MainWindow", "信赖值:"))
+        self.label_8.setText(_translate("MainWindow", "选中技能:"))
+        self.label_6.setText(_translate("MainWindow", "技能等级:"))
+        self.label_11.setText(_translate("MainWindow", "技能专精等级:"))
+        self.label_23.setText(_translate("MainWindow", "修改为:"))
+        self.checkBox_customBest.setText(_translate("MainWindow", "最好"))
+        self.label_selectChar.setText(_translate("MainWindow", "请选择干员"))
+        self.pushButton_charEdit.setText(_translate("MainWindow", "修改"))
+        self.table_char.setHorizontalHeaderLabels(['干员','ID','精英','等级','皮肤','信赖值','技能等级','选中技能','专精等级','潜能等级','操作'])
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_charData), _translate("MainWindow", "干员数据"))
+        self.groupBox_customChar_squad.setTitle(_translate("MainWindow", "自定义编队"))
+        self.checkBox_customBest_squad.setText(_translate("MainWindow", "最好"))
+        self.label_selectChar_squad.setText(_translate("MainWindow", "请选择干员"))
+        self.pushButton_charEdit_squad.setText(_translate("MainWindow", "修改"))
+        self.label_38.setText(_translate("MainWindow", "修改为:"))
+        self.label_32.setText(_translate("MainWindow", "技能"))
+        self.label_36.setText(_translate("MainWindow", "选中技能:"))
+        self.table_squad.setHorizontalHeaderLabels(['干员','装载ID','选中技能','最大技能'])
+        self.label_37.setText(_translate("MainWindow", "当前编队:"))
+        self.label_12.setText(_translate("MainWindow", "注:编队中不能出现相同装载ID的干员,且装载ID不能大于所拥有的干员数；修改编队后，需要手动在游戏主界面编队选中编队中某一干员，随便修改其技能并且返回到主界面来达到修改效果。"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_squad), _translate("MainWindow", "编队数据"))
+        self.log_browser.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
+"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
+"p, li { white-space: pre-wrap; }\n"
+"</style></head><body style=\" font-family:\'SimSun\'; font-size:8pt; font-weight:400; font-style:normal;\" bgcolor=\"#293134\">\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:9pt;\"><br /></p></body></html>"))
+        self.groupBox_porxy.setTitle(_translate("MainWindow", "代理设置"))
+        self.label_21.setText(_translate("MainWindow", "端口:"))
+        self.pushButton_run.setText(_translate("MainWindow", "启动"))
+        self.checkBox_fcm.setText(_translate("MainWindow", "防沉迷破解"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_start), _translate("MainWindow", "启动"))
+        self.file.setTitle(_translate("MainWindow", "文件"))
+        self.about.setTitle(_translate("MainWindow", "关于"))
+        self.action_import.setText(_translate("MainWindow", "导入配置"))
+        self.action_export.setText(_translate("MainWindow", "导出配置"))
+        self.action_exit.setText(_translate("MainWindow", "退出"))
+        self.action_help.setText(_translate("MainWindow", "如何使用"))
+        self.action_notice.setText(_translate("MainWindow", "用户须知"))
+
+#define
+def skintable2list(skin_table_path):
+    skin = json.loads(open(skin_table_path, 'r', encoding='UTF-8').read())
+    skinInner=[]
+    for e,skinId in enumerate(skin['charSkins']):
+        if skinId[:4]=='char' and not skinId in skinInner:
+            skinInner.append(skin['charSkins'][skinId]['charId']+'":"')
+    j=json.loads(str(skinInner).replace('\'','"').replace(']','}]').replace('[','[{').replace('""','{}')[1:-1])
+    for e,skinId in enumerate(skin['charSkins']):
+        if skinId[:4]=='char':
+            charId=skin['charSkins'][skinId]['charId']
+            skinname=skin['charSkins'][skinId]['displaySkin']['skinGroupName']
+            if skinId==charId+'#2':
+                skinname='精二服装'
+            elif skinId == charId+'#1+':
+                skinname='精一服装'
+            if str(j[charId])=='{}':
+                j[charId]='{\''+skinId+'\':\''+skinname+'\'}'
+            else:
+                j[charId]=j[charId][:-1]+',\''+skinId+'\':\''+skinname+'\'}'
+    return str(j).replace('"','').replace('\'','"')
+
+def getCustomChar(charId,charNum,eliteLv,lv,skin,favPt,skillLv,skillIndex,spLv,potLv):
+    skills = charTable[charId]['skills']
+    modSkillPath = [{
+    'skillId': '',
+    'unlock': 1,
+    'state': 0,
+    'specializeLevel': spLv,
+    'completeUpgradeTime': -1
+    }]
+    if len(skills) == 0:
+        modSkill = []
+    else:
+        modSkillTemp=json.dumps(modSkillPath)[1:-1]
+        modSkillPath=json.dumps(modSkillPath)[1:-1]
+        for num in range(1,len(skills)):
+            modSkillPath=modSkillPath+','+modSkillTemp
+        modSkill = json.loads('['+modSkillPath+']') 
+        for e in range(0,len(skills)):
+            modSkill[e]['skillId'] = charTable[charId]['skills'][e]['skillId']
+    CustomChar = {str(charNum):{
+    'instId':charNum,
+    'charId':charId,
+    'favorPoint':favorPointList[favPt],
+    'potentialRank':potLv,
+    'mainSkillLvl':skillLv,
+    'skin':skin,
+    'level':lv,
+    'exp':0,
+    'evolvePhase':eliteLv,
+    'defaultSkillIndex':skillIndex,
+    'gainTime':1556654400,
+    'skills':modSkill}
+    }
+    return CustomChar
+
+def table_char_selectChanged():
+    first=True
+    global indexList,char_isMultiSelect
+    indexList=[]
+    for index in Win.table_char.selectedIndexes():
+        if first:
+            lastIndex=index.row()
+            first=False
+            indexList.append(index.row())
+        if not lastIndex==index.row():
+            indexList.append(index.row())
+        lastIndex=index.row()
+    if not len(indexList)==0:
+        if len(indexList)==1:
+            index=Win.table_char.currentIndex().row()
+            charId=charList[int(Win.table_char.item(index, 1).text())]
+            Win.char_skin.clear()
+            for e,skinId in enumerate(skinList[charId]):
+                    Win.char_skin.addItem(skinList[charId][skinId])
+            if Win.checkBox_customBest.isChecked():
+                    Win.checkBox_customBest.setChecked(False)
+            customChar_reload(index)
+            char_eliteLv_changed()
+        else:
+            char_isMultiSelect=True
+            mulitEditChar_selectChanged()
+
+def mulitEditChar_selectChanged():
+    index=Win.table_char.currentIndex().row()
+    charId=charList[index]
+    Win.label_selectChar.setText('多选')
+    Win.char_skin.clear()
+    for e,skinId in enumerate(skinList[charId]):
+        Win.char_skin.addItem(skinList[charId][skinId])
+    if DebugOff:
+        Win.char_eliteLv.setMaximum(2)
+        Win.char_Lv.setMaximum(90)
+        Win.char_skillIndex.setEnabled(True)
+        Win.char_skillIndex.setMaximum(3)
+
+def table_squad_selectChanged():
+    index=Win.table_squad.currentIndex().row()
+    Win.groupBox_customChar_squad.setEnabled(True)
+    if Win.table_squad.item(index, 0).text()=='无':
+        Win.groupBox_customChar_squad.setEnabled(False)
+        Win.label_selectChar_squad.setText('无')
+    else:
+        customSquads_reload(index)
+
+def customSquads_reload(index):
+    Win.label_selectChar_squad.setText(Win.table_squad.item(index, 0).text())
+    charIn=int(Win.table_squad.item(index, 1).text())
+    charIndex=0
+    for e in charTable:
+        if charTable[e]['name']==Win.table_squad.item(index, 0).text():
+            charIndex=charList.index(e)
+            break
+    skillIn = Win.table_squad.item(index, 2).text()
+    bestCharList=bestChar(charIndex)
+
+    if skillIn in ['1','2','3']:
+        maxSkillIndex=Win.table_squad.item(index, 3).text()
+        Win.char_skillIndex_squad.setMaximum(int(maxSkillIndex))
+        if Win.checkBox_customBest_squad.isChecked():
+            Win.char_skillIndex_squad.setEnabled(False)
+            Win.char_skillIndex_squad.setValue(int(maxSkillIndex))
+        else:
+            Win.char_skillIndex_squad.setEnabled(True)
+            Win.char_skillIndex_squad.setValue(int(skillIn))
+    else:
+        Win.char_skillIndex_squad.setEnabled(False)
+
+def customChar_reload(index):
+    charIndex=int(Win.table_char.item(index, 1).text())
+    charId=charList[charIndex]
+    rarity=charTable[charId]['rarity']
+    Win.label_selectChar.setText(charTable[charId]['name'])
+    bestCharList=bestChar(charIndex)
+    if DebugOff:
+        Win.char_eliteLv.setMaximum(bestCharList[2])
+        Win.char_Lv.setMaximum(bestCharList[3])
+    Win.char_eliteLv.setValue(int(Win.table_char.item(index, 2).text()))
+    Win.char_Lv.setValue(int(Win.table_char.item(index, 3).text()))
+    for e,skinId in enumerate(skinList[charId]):
+        if Win.table_char.item(index, 4).text()==skinList[charId][skinId]:
+            Win.char_skin.setCurrentIndex(e)
+    Win.char_favorPoint.setValue(int(Win.table_char.item(index, 5).text()))
+    Win.char_skillLv.setValue(int(Win.table_char.item(index, 6).text()))
+    skillIn = Win.table_char.item(index, 7).text()
+    if skillIn in ['1','2','3']:
+        Win.char_skillIndex.setEnabled(True)
+        Win.char_skillIndex.setMaximum(int(bestCharList[7]))
+        Win.char_skillIndex.setValue(int(skillIn))
+    else:
+        Win.char_skillIndex.setEnabled(False)
+    Win.char_spLv.setValue(int(Win.table_char.item(index, 8).text()))
+    Win.char_potLv.setValue(int(Win.table_char.item(index, 9).text()))
+
+def userSecretary_changed():
+    Win.user_secretarySkin.clear()
+    charId=charList[Win.user_secretary.currentIndex()]
+    for e,skinId in enumerate(skinList[charId]):
+        Win.user_secretarySkin.addItem(skinList[charId][skinId])
+        
+def checkBoxCustomChar_changed():
+    if Win.checkBox_customChar.isChecked():
+        Win.groupBox_customChar.setEnabled(True)
+    else:
+        Win.groupBox_customChar.setEnabled(False)
+
+def checkBoxCustomBest_changed():
+    if Win.checkBox_customBest.isChecked():
+        customChar_setBest()
+        Win.frame_editChar.setEnabled(False)
+    else:
+        Win.frame_editChar.setEnabled(True)
+
+def customChar_setBest():
+    if not checkSelectChar():
+        return
+    index=Win.table_char.currentIndex().row()
+    charIndex=int(Win.table_char.item(index, 1).text())
+    charId=charList[charIndex]
+    bestCharList=bestChar(charIndex)
+    Win.char_eliteLv.setValue(bestCharList[2])
+    Win.char_Lv.setValue(bestCharList[3])
+    for e,skinId in enumerate(skinList[charId]):
+        if bestCharList[4]==skinList[charId][skinId]:
+            Win.char_skin.setCurrentIndex(e)
+    Win.char_favorPoint.setValue(bestCharList[5])
+    skillIn=bestCharList[6]
+    if skillIn in ['1','2','3']:
+        Win.char_skillIndex.setEnabled(True)
+        Win.char_skillIndex.setMaximum(int(bestCharList[7]))
+        Win.char_skillIndex.setValue(int(bestCharList[7]))
+    else:
+        Win.char_skillIndex.setEnabled(False)
+    Win.char_spLv.setValue(bestCharList[8])
+    Win.char_potLv.setValue(bestCharList[9])
+
+def debug():
+    global DebugOff
+    if DebugOff:
+        DebugOff=False
+        Win.user_Lv.setMaximum(999999999)
+        Win.user_apMax.setMaximum(999999999)
+        Win.char_eliteLv.setMaximum(999999999)
+        Win.char_Lv.setMaximum(999999999)
+        Win.char_skillLv.setMaximum(999999999)
+        Win.char_spLv.setMaximum(999999999)
+        Win.char_potLv.setMaximum(999999999)
+        Win.action_debug.setText('关闭Debug模式')
+    else:
+        DebugOff=True
+        Win.user_Lv.setMaximum(120)
+        Win.user_apMax.setMaximum(135)
+        Win.char_skillLv.setMaximum(7)
+        Win.char_eliteLv.setMaximum(2)
+        charIndex=Win.table_char.currentIndex().row()
+        if charIndex!=-1:
+            Win.char_eliteLv.setValue(bestChar(charIndex)[2])
+            char_lv_reload()
+        Win.char_spLv.setMaximum(3)
+        Win.char_potLv.setMaximum(5)
+        Win.action_debug.setText('Debug模式')
+
+def run_and_exit():
+    global isRun
+    if isRun:
+        isRun=False
+        Win.pushButton_run.setText('停止')
+        f=open('.\data.acdata', 'w', encoding='UTF-8')
+        f.write(get_data())
+        f.close
+        Win.log_browser.append('<font color="red">ArknightsCheater:启动mitmproxy中...</font>')
+        Win.thread.start()
+        Win.onLabel.setText('修改器端已在端口%s上开启'% (str(Win.gob_porxy.value())))
+    else:
+        isRun=True
+        Win.pushButton_run.setText('启动')
+        Win.thread.terminate()
+        subprocess.Popen("taskkill /f /im mitmdump.exe>nul",shell=True)
+        Win.log_browser.document().clear()
+        Win.log_browser.setHtml("<html><head></head><body bgcolor=#293134></body></html>")
+        Win.log_browser.append('<font color="#fff">用户停止操作</font>')
+        Win.onLabel.setText('修改器端已关闭')
+
+def get_data():
+    global porxy
+    global userUID,userName,userNameNum,userResume,squadsNm
+    isFCM=Win.checkBox_fcm.isChecked()
+    CustomCharTemp=''
+    if not Win.user_UID.text()=='':
+        userUID=Win.user_UID.text()
+    if not Win.user_name.text()=='':
+        userName=Win.user_name.text()
+    if not Win.user_nameNum.text()=='':
+        userNameNum=Win.user_nameNum.text()
+    if not Win.user_resume.text()=='':
+        userResume=Win.user_resume.text()
+    
+    cr_total=Win.table_char.rowCount()
+    for index in range(0,cr_total):
+        cr_charId=charList[int(Win.table_char.item(index, 1).text())]
+        cr_eliteLv=int(Win.table_char.item(index, 2).text())
+        cr_lv=int(Win.table_char.item(index, 3).text())
+        for e,skinId in enumerate(skinList[cr_charId]):
+            if Win.table_char.item(index, 4).text()==skinList[cr_charId][skinId]:
+                cr_skinId=skinId
+        cr_favPt=int(Win.table_char.item(index, 5).text())
+        cr_skillLv=int(Win.table_char.item(index, 6).text())
+        cr_skillIn = Win.table_char.item(index, 7).text()
+        if cr_skillIn in ['1','2','3']:
+            cr_skillIndex=int(cr_skillIn)-1
+        else:
+            cr_skillIn
