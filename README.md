@@ -30,13 +30,13 @@
 2. 进入手机或模拟器WLAN(Wi-Fi)设置配置手机代理。<br>安卓：修改网络--高级选项--代理--手动<br>iOS：HTTP代理--配置代理--手动<br>将服务器和端口设置为mitmproxy所监听的端口和主机ip。<br>保存/储存
 
  _例如此时我的电脑和手机处于同一局域网下，电脑的ip为192.168.1.48，端口在12450上开放。_![](https://i0.hdslb.com/bfs/article/318e9a0abec227de118d118144271d7611032704.jpg)
- _安卓操作_![](https://i0.hdslb.com/bfs/article/e478d1bc37a358899d670a6bb2f9744dcff51abe.jpg)
+ _安卓操作_![](https://i0.hdslb.com/bfs/article/ec7e3ed3fb3b1bb3df5cf24a33922cd39e6c04a7.jpg)
  _iOS操作_
 
 3. 进入网站 http://mitm.it 下载证书(iOS为描述文件)并安装。<br>iOS多一步：设置--通用--关于本机--证书信任设置--mitmproxy--打开<br>_(此步必须在上一步完成后且电脑端开启着mitmproxy或运行着脚本时候进行)_
 ![](https://i0.hdslb.com/bfs/article/3c6435bb30b234adfd323673e590dd8c10909bc0.jpg)
 _安卓操作_
-![](https://i0.hdslb.com/bfs/article/e478d1bc37a358899d670a6bb2f9744dcff51abe.jpg@1650w_935h.webp)
+![](https://i0.hdslb.com/bfs/article/e478d1bc37a358899d670a6bb2f9744dcff51abe.jpg)
 _iOS操作_
 ## 使用说明
 
